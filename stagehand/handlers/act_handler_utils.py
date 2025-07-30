@@ -2,6 +2,7 @@ import json
 from collections.abc import Coroutine
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable, Optional
+import os
 
 if TYPE_CHECKING:
     from stagehand.page import StagehandPage
@@ -416,6 +417,8 @@ async def download_file(ctx: MethodHandlerContext) -> None:
 
         if save_path:
             await download.save_as(save_path)
+            # rename current file to save_path for avoiding dirty data
+            os.rename(await download.path(), save_path)
             ctx.logger.info(
                 message=f"File downloaded and saved to {save_path}",
                 category="action",
