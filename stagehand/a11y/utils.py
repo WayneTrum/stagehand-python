@@ -48,6 +48,9 @@ async def _clean_structural_nodes(
             return cleaned_children[0]
         elif len(cleaned_children) == 0:
             # Remove empty structural node
+            if node.get("name"):
+                # keep node if it has a name. just incase it's a icon or label
+                return {**node, "children": []}
             return None
         # Keep node if multiple children, try resolving role below
 
