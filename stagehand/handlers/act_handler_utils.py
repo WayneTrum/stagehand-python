@@ -360,6 +360,106 @@ async def select_option(ctx: MethodHandlerContext) -> None:
         raise e
 
 
+async def upload_file(ctx: MethodHandlerContext) -> None:
+    try:
+        file_path = str(ctx.args[0]) if ctx.args and ctx.args[0] is not None else ""
+        if not file_path:
+            ctx.logger.warn(
+                message="No file path provided for upload action",
+                category="action",
+                auxiliary={"xpath": {"value": ctx.xpath, "type": "string"}},
+            )
+            return
+
+        async with ctx.stagehand_page._page.expect_file_chooser() as fc_info:
+            # Using JavaScript click
+            await ctx.locator.evaluate("(el) => el.click()")
+
+        file_chooser = await fc_info.value
+        await file_chooser.set_files(file_path)
+        await handle_possible_page_navigation(
+            "upload",
+            ctx.xpath,
+            ctx.initial_url,
+            ctx.stagehand_page,
+            ctx.logger,
+            ctx.dom_settle_timeout_ms,
+        )
+    except Exception as e:
+        ctx.logger.error(
+            message="error uploading file",
+            category="action",
+            auxiliary={
+                "error": {"value": str(e), "type": "string"},
+                "trace": {
+                    "value": getattr(e, "__traceback__", ""),
+                    "type": "string",
+                },
+                "xpath": {"value": ctx.xpath, "type": "string"},
+                "args": {"value": json.dumps(ctx.args), "type": "object"},
+            },
+        )
+        raise e
+
+
+async def download_file(ctx: MethodHandlerContext) -> None:
+    try:
+        # The argument can be a path where to save the file.
+        # If not provided, the download will be completed but not saved to a specific path.
+        save_path = str(ctx.args[0]) if ctx.args and ctx.args[0] is not None else None
+
+        async with ctx.stagehand_page._page.expect_download() as download_info:
+            # Using JavaScript click to trigger the download
+            await ctx.locator.evaluate("(el) => el.click()")
+
+        download = await download_info.value
+
+        if save_path:
+            await download.save_as(save_path)
+            ctx.logger.info(
+                message=f"File downloaded and saved to {save_path}",
+                category="action",
+                auxiliary={"path": {"value": save_path, "type": "string"}},
+            )
+        else:
+            # If no path is specified, you might want to just get the suggested filename or URL
+            ctx.logger.info(
+                message=f"File download triggered, suggested filename: {download.suggested_filename}",
+                category="action",
+                auxiliary={
+                    "suggested_filename": {
+                        "value": download.suggested_filename,
+                        "type": "string",
+                    },
+                    "url": {"value": download.url, "type": "string"},
+                },
+            )
+
+        await handle_possible_page_navigation(
+            "download",
+            ctx.xpath,
+            ctx.initial_url,
+            ctx.stagehand_page,
+            ctx.logger,
+            ctx.dom_settle_timeout_ms,
+        )
+    except Exception as e:
+        ctx.logger.error(
+            message="error downloading file",
+            category="action",
+            auxiliary={
+                "error": {"value": str(e), "type": "string"},
+                "trace": {
+                    "value": getattr(e, "__traceback__", ""),
+                    "type": "string",
+                },
+                "xpath": {"value": ctx.xpath, "type": "string"},
+                "args": {"value": json.dumps(ctx.args), "type": "object"},
+            },
+        )
+        raise e
+
+
 async def click_element(ctx: MethodHandlerContext) -> None:
     ctx.logger.debug(
         message=f"page URL before click {ctx.stagehand_page._page.url}",
@@ -522,4 +622,6 @@ method_handler_map: dict[
     "nextChunk": scroll_to_next_chunk,
     "prevChunk": scroll_to_previous_chunk,
     "selectOptionFromDropdown": select_option,
+    "uploadFile": upload_file,
+    "downloadFile": download_file,
 }

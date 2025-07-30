@@ -65,6 +65,88 @@ class TestActExecution:
         assert result.success is True
         assert "performed successfully" in result.message
         assert result.action == "Submit button"
+
+    @pytest.mark.asyncio
+    async def test_act_with_upload_file(self, mock_stagehand_page):
+        """Test executing an action with file upload"""
+        mock_client = MagicMock()
+        mock_llm = MockLLMClient()
+        mock_client.llm = mock_llm
+        mock_client.start_inference_timer = MagicMock()
+        mock_client.update_metrics = MagicMock()
+        mock_client.logger = MagicMock()
+
+        handler = ActHandler(mock_stagehand_page, mock_client, "", True)
+
+        # Mock the observe handler to return a successful result for uploading a file
+        mock_observe_result = ObserveResult(
+            selector="xpath=//input[@type='file']",
+            description="File input",
+            method="uploadFile",
+            arguments=["/path/to/dummy/file.txt"],
+        )
+        mock_stagehand_page._observe_handler = MagicMock()
+        mock_stagehand_page._observe_handler.observe = AsyncMock(
+            return_value=[mock_observe_result]
+        )
+
+        # Mock the playwright method execution
+        handler._perform_playwright_method = AsyncMock()
+
+        result = await handler.act({"action": "upload the file /path/to/dummy/file.txt"})
+
+        assert isinstance(result, ActResult)
+        assert result.success is True
+        assert "performed successfully" in result.message
+        assert result.action == "File input"
+
+        # Verify that _perform_playwright_method was called with the correct parameters
+        handler._perform_playwright_method.assert_called_once()
+        call_args = handler._perform_playwright_method.call_args[0]
+        assert call_args[1] == "uploadFile"
+        assert call_args[3] == ["/path/to/dummy/file.txt"]
+
+    @pytest.mark.asyncio
+    async def test_act_with_download_file(self, mock_stagehand_page):
+        """Test executing an action with file download"""
+        mock_client = MagicMock()
+        mock_llm = MockLLMClient()
+        mock_client.llm = mock_llm
+        mock_client.start_inference_timer = MagicMock()
+        mock_client.update_metrics = MagicMock()
+        mock_client.logger = MagicMock()
+
+        handler = ActHandler(mock_stagehand_page, mock_client, "", True)
+
+        # Mock the observe handler to return a successful result for downloading a file
+        mock_observe_result = ObserveResult(
+            selector="xpath=//a[@id='download-link']",
+            description="Download link",
+            method="downloadFile",
+            arguments=["/path/to/save/downloaded_file.txt"],
+        )
+        mock_stagehand_page._observe_handler = MagicMock()
+        mock_stagehand_page._observe_handler.observe = AsyncMock(
+            return_value=[mock_observe_result]
+        )
+
+        # Mock the playwright method execution
+        handler._perform_playwright_method = AsyncMock()
+
+        result = await handler.act(
+            {"action": "download the file to /path/to/save/downloaded_file.txt"}
+        )
+
+        assert isinstance(result, ActResult)
+        assert result.success is True
+        assert "performed successfully" in result.message
+        assert result.action == "Download link"
+
+        # Verify that _perform_playwright_method was called with the correct parameters
+        handler._perform_playwright_method.assert_called_once()
+        call_args = handler._perform_playwright_method.call_args[0]
+        assert call_args[1] == "downloadFile"
+        assert call_args[3] == ["/path/to/save/downloaded_file.txt"]
     
 
     

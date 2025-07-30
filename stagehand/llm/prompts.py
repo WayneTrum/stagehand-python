@@ -202,7 +202,9 @@ If the user is asking to scroll to a position on the page, e.g., 'halfway' or 0.
 If the user is asking to scroll to the next chunk/previous chunk, choose the nextChunk/prevChunk method. No arguments are required here.
 If the action implies a key press, e.g., 'press enter', 'press a', 'press space', etc., always choose the press method with the appropriate key as argument — e.g. 'a', 'Enter', 'Space'. Do not choose a click action on an on-screen keyboard. Capitalize the first character like 'Enter', 'Tab', 'Escape' only for special keys.
 If the action implies choosing an option from a dropdown, AND the corresponding element is a 'select' element, choose the selectOptionFromDropdown method. The argument should be the text of the option to select.
-If the action implies choosing an option from a dropdown, and the corresponding element is NOT a 'select' element, choose the click method."""
+If the action implies choosing an option from a dropdown, and the corresponding element is NOT a 'select' element, choose the click method.
+If the action implies downloading a file, choose the downloadFile method. The argument should be the path where to save the file.
+If the action implies uploading a file, choose the uploadFile method. The argument should be the path to the file to upload."""
 
     if variables and len(variables) > 0:
         variables_prompt = f"The following variables are available to use in the action: {', '.join(variables.keys())}. Fill the argument variables with the variable name."
@@ -227,6 +229,8 @@ You will be given a goal and a list of steps that have been taken so far. Your j
    - Single click on a specific element
    - Type into a single input field
    - Select a single option
+   - Download a file
+   - Upload a file
 3. Avoid combining multiple actions in one instruction
 4. If multiple actions are needed, they should be separate steps""",
     )
