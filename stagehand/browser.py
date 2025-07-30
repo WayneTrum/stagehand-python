@@ -205,6 +205,8 @@ async def connect_local_browser(
             "ignore_https_errors": local_browser_launch_options.get(
                 "ignoreHTTPSErrors", True
             ),
+            "record_video_dir": local_browser_launch_options.get("record_video_dir"),
+            "record_video_size": local_browser_launch_options.get("record_video_size"),
         }
         launch_options = {k: v for k, v in launch_options.items() if v is not None}
 
