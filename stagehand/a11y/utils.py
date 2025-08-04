@@ -31,7 +31,7 @@ async def _clean_structural_nodes(
     # 2) Base case: if no children exist, this is effectively a leaf.
     children = node.get("children", [])
     if not children:
-        return None if node.get("role") in ("generic", "none") else node
+        return None if node.get("role") in ("generic", "none") and not node.get("name") else node
 
     # 3) Recursively clean children
     cleaned_children_tasks = [
@@ -43,7 +43,7 @@ async def _clean_structural_nodes(
     # 4) Prune "generic" or "none" nodes first
     node_role = node.get("role")
     if node_role in ("generic", "none"):
-        if len(cleaned_children) == 1:
+        if len(cleaned_children) == 1 and node.get("name") is None:
             # Collapse single-child structural node
             return cleaned_children[0]
         elif len(cleaned_children) == 0:
